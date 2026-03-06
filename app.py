@@ -13,7 +13,11 @@ import json
 from datetime import datetime, date
 from functools import wraps
 
-app = Flask(__name__, static_folder="static", template_folder="templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__,
+    static_folder=os.path.join(BASE_DIR, "static"),
+    template_folder=os.path.join(BASE_DIR, "templates"))
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 CORS(app, supports_credentials=True)
 
@@ -564,16 +568,19 @@ def get_iso_week(d: date) -> str:
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve(path):
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, "index.html")
+    static_dir = os.path.join(BASE_DIR, "static")
+    if path and os.path.exists(os.path.join(static_dir, path)):
+        return send_from_directory(static_dir, path)
+    return send_from_directory(static_dir, "index.html")
 
 # ─────────────────────────────────────────────
-# STARTUP
+# STARTUP — init_db called at module level so
+# gunicorn triggers it (not just python app.py)
 # ─────────────────────────────────────────────
+
+init_db()  # runs on every worker startup
 
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_ENV") == "development"
     print(f"CapacityIQ running on http://localhost:{port}")
