@@ -1659,11 +1659,16 @@ function StaffTab({staffList,vacations,projects,allocMap,weeks,threshold,personW
 // ─────────────────────────────────────────────────────────────────────────────
 // API HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-async function api(path, method="GET", body=null){
+async function api(path, method="GET", body=null, allow401=false){
   const opts={ method, credentials:"include", headers:{} };
   if(body){ opts.headers["Content-Type"]="application/json"; opts.body=JSON.stringify(body); }
   const res=await fetch(path,opts);
-  if(res.status===401) { window.location.reload(); return null; }
+  if(res.status===401){
+    if(allow401) return {authenticated:false};
+    // session expired mid-session — reload to show login
+    if(path!=="/api/auth/me") window.location.reload();
+    return null;
+  }
   return res.json();
 }
 
@@ -1920,7 +1925,7 @@ function ChangePasswordPanel({onClose}){
 function AppRoot(){
   const[authState,setAuthState]=useState(null); // null=loading, false=logged out, obj=logged in
   useEffect(()=>{
-    api("/api/auth/me").then(res=>{
+    api("/api/auth/me","GET",null,true).then(res=>{
       setAuthState(res?.authenticated?res:false);
     }).catch(()=>setAuthState(false));
   },[]);
