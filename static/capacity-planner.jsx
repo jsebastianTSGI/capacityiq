@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+// CapacityIQ — browser-compatible React app (no bundler)
+const { useState, useMemo, useRef, useEffect, useCallback } = React;
 
 // ─── SEED DATA ───────────────────────────────────────────────────────────────
 const STAFF_SEED = [
@@ -1937,7 +1938,8 @@ function AppRoot(){
   return <CapacityPlanner currentUser={authState} onLogout={()=>setAuthState(false)}/>;
 }
 
-export default AppRoot;
+// Make AppRoot available globally for index.html to mount
+window.AppRoot = AppRoot;
 
 function CapacityPlanner({currentUser,onLogout}){
   // ── all data starts empty; loaded from API on mount ──
